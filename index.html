@@ -1,1 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cancel Meeting</title>
+  <style>
+    :root{
+      --blue:#14699F;
+      --blue-ink:#0b3f66;
+      --bg:#ffffff;
+      --ink:#0f172a;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --shadow: 0 10px 25px rgba(2, 8, 23, .08);
+      --radius: 16px;
+    }
 
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
+      background:#fff;
+      color:var(--ink);
+    }
+
+    .app{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      background:var(--bg);
+    }
+
+    .topbar{
+      height:64px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:var(--bg);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar .back{
+      position:absolute;
+      left:14px;
+      width:40px;
+      height:40px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      color:#111827;
+      border:1px solid transparent;
+      background:transparent;
+      cursor:pointer;
+    }
+    .topbar .back:active{transform:translateY(1px)}
+    .topbar .title{
+      font-weight:600;
+      letter-spacing:.2px;
+    }
+
+    .wrap{
+      width:min(560px, 100%);
+      margin:0 auto;
+      padding:22px 18px 26px;
+    }
+
+    .screen{
+      display:none;
+      animation: fade .14s ease-out;
+    }
+    .screen.active{display:block}
+    @keyframes fade{
+      from{opacity:.4; transform:translateY(6px)}
+      to{opacity:1; transform:translateY(0)}
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--ink);
+      border-radius:999px;
+      padding:12px 16px;
+      font-weight:600;
+      font-size:14.5px;
+      cursor:pointer;
+      transition:transform .06s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn.outline-blue{
+      border-color:rgba(20,105,159,.55);
+      color:var(--blue-ink);
+      background:rgba(20,105,159,.04);
+    }
+    .btn.primary{
+      border-color:transparent;
+      background:var(--blue);
+      color:#fff;
+      padding:14px 18px;
+    }
+    .btn.primary:hover{filter:brightness(.98)}
+    .btn.wide{
+      width:100%;
+      border-radius:12px;
+      padding:16px 18px;
+      font-size:15px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      box-shadow:0 6px 18px rgba(20,105,159,.18);
+    }
+    .btn.ghost{
+      border-color:transparent;
+      background:transparent;
+      color:var(--blue-ink);
+      padding:10px 12px;
+      font-weight:700;
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:#fff;
+      box-shadow: 0 6px 20px rgba(2,8,23,.05);
+      overflow:hidden;
+    }
+
+    /* Banner (same as your reschedule file) */
+    .banner{
+      height:168px;
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      background: url('https://d34hmiuaex7c0.cloudfront.net/2952/uploads/form_value_featured_1767649962307.png');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      position:relative;
+    }
+    .banner::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg, rgba(0,0,0,.00) 35%, rgba(0,0,0,.22) 100%);
+      pointer-events:none;
+    }
+    .banner .tag{
+      position:absolute;
+      left:16px;
+      bottom:16px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:10px 14px;
+      font-weight:700;
+      color:#991b1b;
+      box-shadow: var(--shadow);
+      z-index:2;
+    }
+
+    .banner .dots span{
+      width:7px; height:7px;
+      border-radius:999px;
+      background:rgba(255,255,255,.55);
+    }
+    .banner .dots span.active{background:rgba(255,255,255,.95)}
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin:18px 0 10px;
+      font-size:18px;
+      font-weight:700;
+    }
+    .icon{
+      width:28px;height:28px;border-radius:8px;
+      background:rgba(220,38,38,.10);
+      display:grid;place-items:center;
+      color:#991b1b;
+    }
+
+    .info{
+      display:grid;
+      gap:10px;
+      margin:14px 0 16px;
+    }
+    .info .line{
+      display:flex;
+      gap:10px;
+      color:var(--muted);
+      font-size:14px;
+      align-items:flex-start;
+    }
+    .info .line b{
+      color:var(--ink);
+      font-weight:700;
+      min-width:118px;
+      display:inline-block;
+    }
+
+    .notice{
+      border:1px solid rgba(220,38,38,.22);
+      background:rgba(220,38,38,.06);
+      color:#7f1d1d;
+      padding:12px 12px;
+      border-radius:14px;
+      font-weight:700;
+      font-size:13px;
+      line-height:1.45;
+      margin-top:12px;
+    }
+
+    .form{
+      display:grid;
+      gap:12px;
+      margin-top:14px;
+    }
+    label{
+      font-size:12.5px;
+      color:var(--muted);
+      font-weight:700;
+      display:block;
+      margin:0 0 7px;
+    }
+    .field{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:12px 12px;
+      font-size:14px;
+      outline:none;
+      background:#fff;
+    }
+    .field:focus{
+      border-color:rgba(59,130,246,.45);
+      box-shadow: 0 0 0 4px rgba(59,130,246,.10);
+    }
+    textarea.field{
+      min-height:110px;
+      resize:vertical;
+    }
+
+    .actions{
+      margin-top:18px;
+      display:grid;
+      gap:10px;
+    }
+
+    .successMark{
+      width:72px;height:72px;border-radius:999px;
+      display:grid;place-items:center;
+      background:rgba(220,38,38,.10);
+      color:#7f1d1d;
+      margin:14px auto 10px;
+      border:1px solid rgba(220,38,38,.20);
+      font-size:34px;
+      font-weight:700;
+    }
+    .h1{
+      text-align:center;
+      font-size:26px;
+      line-height:1.15;
+      margin:10px 0 6px;
+      font-weight:700;
+    }
+    .sub{
+      text-align:center;
+      color:var(--muted);
+      font-size:14.5px;
+      margin:0 0 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="topbar">
+      <button class="back" id="backBtn" aria-label="Back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" stroke="#111827" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="title" id="hostName">Pete Romano</div>
+    </div>
+
+    <div class="wrap">
+
+      <!-- START: go straight to cancel confirm -->
+      <section class="screen active" data-screen="cancel_01">
+        <div class="banner" aria-hidden="true">
+          <div class="tag">Virtual 1-1 Connect</div>
+          <div class="dots"><span class="active"></span><span></span><span></span></div>
+        </div>
+
+        <div class="section-title">
+          <div class="icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+              <path d="M6 6l12 12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          Confirm Cancellation
+        </div>
+
+        <div class="card" style="padding:14px">
+          <div style="font-weight:700; font-size:16px; margin-bottom:6px">Meeting details</div>
+          <div class="info" style="margin:0">
+            <div class="line"><b>Meeting</b> <span id="cTitle">Virtual 1-1 Connect</span></div>
+            <div class="line"><b>When</b> <span id="cWhen">Thu, Feb 19 • 10:15 AM</span></div>
+            <div class="line"><b>Time zone</b> <span id="cTz">America/New_York</span></div>
+          </div>
+        </div>
+
+        <div class="notice">
+          Cancelling removes the meeting from the calendar. If you still want to meet, reschedule instead.
+        </div>
+
+        <div class="form">
+          <div>
+            <label>Reason (optional)</label>
+            <textarea class="field" id="cancelReason" placeholder="A short note can be helpful (optional)"></textarea>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary wide" id="cancelConfirmBtn" style="background:#dc2626">
+            Cancel Meeting
+          </button>
+          <button class="btn ghost" id="doneBtn0">Done</button>
+        </div>
+      </section>
+
+      <!-- CANCEL - done -->
+      <section class="screen" data-screen="cancel_done">
+        <div class="successMark">✕</div>
+        <div class="h1">Meeting cancelled</div>
+        <p class="sub">The host has been notified.</p>
+
+        <div class="actions">
+          <button class="btn primary wide" id="doneBtn" style="background:#dc2626">Done</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script>
+    /***********************
+     * MOCK DATA (swap these)
+     ***********************/
+    const state = {
+      hostName: "Pete Romano",
+      meetingTitle: "Virtual 1-1 Connect",
+      timeZone: "America/New_York",
+      currentWhenText: "Thu, Feb 19 • 10:15 AM"
+    };
+
+    /***********************
+     * SCREEN NAV
+     ***********************/
+    const screens = Array.from(document.querySelectorAll(".screen"));
+    const backBtn = document.getElementById("backBtn");
+    const hostNameEl = document.getElementById("hostName");
+    hostNameEl.textContent = state.hostName;
+
+    // Start on cancel_01 (no intro screen)
+    const historyStack = ["cancel_01"];
+
+    function show(screenId, pushHistory=true){
+      screens.forEach(s => s.classList.toggle("active", s.dataset.screen === screenId));
+      if(pushHistory){
+        const last = historyStack[historyStack.length - 1];
+        if(last !== screenId) historyStack.push(screenId);
+      }
+      // Hide back button on first screen only
+      backBtn.style.visibility = (screenId === "cancel_01") ? "hidden" : "visible";
+    }
+
+    backBtn.addEventListener("click", () => {
+      if(historyStack.length <= 1) return;
+      historyStack.pop();
+      const prev = historyStack[historyStack.length - 1] || "cancel_01";
+      show(prev, false);
+    });
+
+    /***********************
+     * WIRE UP TEXT
+     ***********************/
+    document.getElementById("cTitle").textContent = state.meetingTitle;
+    document.getElementById("cWhen").textContent = state.currentWhenText;
+    document.getElementById("cTz").textContent = state.timeZone;
+
+    /***********************
+     * CANCEL -> DONE
+     ***********************/
+    document.getElementById("cancelConfirmBtn").addEventListener("click", () => {
+      // In real use: send cancelReason to backend
+      // const reason = document.getElementById("cancelReason").value.trim();
+      show("cancel_done");
+    });
+
+    /***********************
+     * DONE (mock exit)
+     ***********************/
+    function done(){
+      alert("Done (mock). Hook this to close modal / redirect.");
+    }
+    document.getElementById("doneBtn0").addEventListener("click", done);
+    document.getElementById("doneBtn").addEventListener("click", done);
+
+    // Ensure correct initial back button state
+    backBtn.style.visibility = "hidden";
+  </script>
+</body>
+</html>
